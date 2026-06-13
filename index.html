@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>🏆 2026世界杯预测平台 · 多人版</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --surface: #131820;
+      --surface2: #1a1f2b;
+      --surface3: #1e2432;
+      --gold: #d4a843;
+      --gold-light: #f0d078;
+      --text: #e0e0e0;
+      --text2: #a0a8b4;
+      --text3: #6b7280;
+      --border: #2a3040;
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6;
+    }
+    .header { background: var(--surface); border-bottom:1px solid var(--border); padding:14px 20px; position:sticky; top:0; z-index:100; }
+    .header-inner { max-width:1300px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+    .logo { font-size:1.4rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:10px; }
+    .user-area { display:flex; align-items:center; gap:10px; }
+    .user-area span { color:var(--text2); }
+    .btn { padding:8px 18px; border-radius:20px; border:none; cursor:pointer; font-weight:600; font-size:0.9rem; transition:0.2s; white-space:nowrap; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-outline { background:transparent; border:1.5px solid var(--border); color:var(--text); }
+    .btn-sm { padding:5px 12px; font-size:0.78rem; border-radius:14px; }
+    .btn-xs { padding:3px 10px; font-size:0.7rem; border-radius:12px; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .container { max-width:1300px; margin:0 auto; padding:16px 20px; }
+    .tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:20px; background:var(--surface); border-radius:var(--radius); padding:5px; border:1px solid var(--border); }
+    .tab-btn { padding:10px 20px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-radius:8px; font-weight:500; font-size:0.9rem; white-space:nowrap; }
+    .tab-btn.active { background:var(--surface3); color:#fff; font-weight:700; }
+    .group-subtabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:16px; background:var(--surface); border-radius:var(--radius); padding:5px; border:1px solid var(--border); }
+    .group-subtab { padding:8px 16px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-radius:8px; font-weight:500; font-size:0.85rem; white-space:nowrap; }
+    .group-subtab.active { background:var(--accent); color:#fff; }
+    .section-title { font-size:1.15rem; font-weight:700; margin-bottom:14px; color:#fff; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:space-between; }
+    .matches-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(380px,1fr)); gap:12px; }
+    .match-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; transition:0.2s; }
+    .match-card:hover { border-color:#4a5568; box-shadow:var(--shadow); }
+    .match-card.correct-prediction { border-left:3px solid #22c55e; }
+    .match-card.wrong-prediction { border-left:3px solid #e74c3c; }
+    .match-card-header { display:flex; justify-content:space-between; margin-bottom:12px; font-size:0.75rem; color:var(--text3); }
+    .teams-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .team-name { font-weight:600; font-size:1rem; color:#fff; flex:1; text-align:center; }
+    .team-rank { font-size:0.7rem; color:var(--gold-light); margin-left:4px; }
+    .vs-badge { font-weight:700; color:var(--text3); flex-shrink:0; }
+    .result-actual { margin-bottom:8px; font-size:0.78rem; color:var(--gold-light); font-weight:600; }
+    .prediction-row { display:flex; gap:6px; margin-bottom:10px; }
+    .pred-option { flex:1; padding:8px 6px; border:1.5px solid var(--border); background:var(--surface2); color:var(--text2); border-radius:6px; cursor:pointer; font-size:0.75rem; font-weight:600; text-align:center; }
+    .pred-option:hover { border-color:var(--accent); color:#fff; }
+    .pred-option.selected { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .pred-option.selected-away { background:var(--accent2); border-color:var(--accent2); }
+    .ratings-toggle { text-align:right; margin-bottom:4px; }
+    .ratings-panel { margin-top:8px; background:var(--surface2); border-radius:8px; padding:12px; display:none; }
+    .ratings-panel.open { display:block; }
+    .rating-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:0.78rem; }
+    .rating-label { width:75px; color:var(--text2); }
+    .rating-input { width:60px; background:var(--surface3); border:1px solid var(--border); color:#fff; padding:3px 6px; border-radius:4px; text-align:center; }
+    .total-score { margin-top:8px; font-weight:700; color:var(--gold-light); font-size:0.8rem; text-align:center; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.7rem; }
+    .badge-correct { background:rgba(34,197,94,0.2); color:#22c55e; }
+    .badge-wrong { background:rgba(231,76,60,0.2); color:#e74c3c; }
+    .badge-pending { background:rgba(160,168,180,0.15); color:#a0a8b4; }
+    .team-cards-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap:12px; }
+    .team-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; transition:0.2s; }
+    .team-card:hover { border-color:#4a5568; box-shadow:var(--shadow); }
+    .team-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .team-card-num { color:var(--gold-light); font-weight:700; font-size:0.9rem; }
+    .team-card-body { display:flex; flex-direction:column; gap:8px; }
+    .team-card input { background:var(--surface3); border:1px solid var(--border); color:#fff; padding:8px 10px; border-radius:6px; }
+    .team-card .name-input { flex:1; }
+    .team-card .rank-input { width:90px; text-align:center; }
+    .delete-team-btn { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:1.1rem; }
+    .groups-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:16px; }
+    .group-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; transition:0.2s; }
+    .group-card:hover { border-color:#4a5568; box-shadow:var(--shadow); }
+    .group-card h4 { color:var(--gold); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+    .group-card select { width:100%; margin-bottom:8px; background:var(--surface3); border:1px solid var(--border); color:#fff; padding:8px; border-radius:6px; }
+    .delete-group-btn { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:1.1rem; }
+    .overview-list { display:flex; flex-direction:column; gap:8px; }
+    .overview-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; display:flex; align-items:center; gap:10px; transition:0.2s; }
+    .overview-item:hover { border-color:#4a5568; }
+    .overview-rank { width:32px; color:var(--gold-light); font-weight:700; }
+    .overview-name { flex:1; font-weight:600; }
+    .overview-score { color:var(--gold-light); font-weight:600; margin-right:8px; }
+    .star-btn { background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text3); transition:0.2s; }
+    .star-btn.favorite { color:#f0d078; text-shadow:0 0 8px rgba(240,208,120,0.5); }
+    .auth-modal { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000; }
+    .auth-box { background:var(--surface); border-radius:12px; padding:24px; width:320px; border:1px solid var(--border); }
+    .auth-box input { width:100%; background:var(--surface3); border:1px solid var(--border); color:#fff; padding:10px; margin-bottom:10px; border-radius:8px; }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1e293b; color:#fff; padding:10px 22px; border-radius:24px; z-index:999; animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from{transform:translateX(-50%) translateY(20px);opacity:0;} to{transform:translateX(-50%) translateY(0);opacity:1;} }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="logo"><span>🏆</span><span>2026世界杯预测平台</span></div>
+    <div class="user-area">
+      <span id="userLabel">未登录</span>
+      <button class="btn btn-outline btn-sm" id="loginBtn">登录 / 注册</button>
+      <button class="btn btn-outline btn-sm" onclick="currentTab='leaderboard-tab';renderAll();">📊 排行榜</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs" id="mainTabs">
+    <button class="tab-btn" data-tab="team-ratings">🌍 世界杯球队</button>
+    <button class="tab-btn active" data-tab="group-stage">📋 小组赛</button>
+    <button class="tab-btn" data-tab="knockout-stage">⚔️ 淘汰赛</button>
+    <button class="tab-btn" data-tab="my-predictions">✅ 我的预测</button>
+    <button class="tab-btn" data-tab="results-input">📝 录入结果</button>
+    <button class="tab-btn" data-tab="leaderboard-tab">🏅 排行榜</button>
+  </div>
+  <div class="group-subtabs" id="groupSubtabs"></div>
+  <div id="contentArea"></div>
+</div>
+
+<div class="auth-modal" id="authModal" style="display:none;">
+  <div class="auth-box">
+    <h3 style="color:#fff;margin-bottom:16px;">登录 / 注册</h3>
+    <input type="email" id="authEmail" placeholder="邮箱">
+    <input type="password" id="authPassword" placeholder="密码">
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" id="signInBtn">登录</button>
+      <button class="btn btn-outline" id="signUpBtn">注册</button>
+    </div>
+    <button class="btn btn-outline btn-sm" id="closeAuthBtn" style="margin-top:8px;width:100%;">取消</button>
+  </div>
+</div>
+<div id="toastContainer"></div>
+
+<script>
+// ===================== SUPABASE 初始化 =====================
+const SUPABASE_URL = 'https://lxkfbjipjtzexljcnglx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_mqgPJ49HHSf8NbMWj6AVYw_KoCwyfGM';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ===================== 全局变量 =====================
+let currentUser = null;
+let currentTab = 'group-stage';
+let currentGroup = 'A';
+let currentRatingSubtab = 'overview';
+let teamsModified = false;
+let groupsModified = false;
+let cachedTeams = [];
+let cachedGroups = {};
+let cachedPredictions = {};
+let cachedResults = {};
+
+const GROUP_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+// ===================== 工具函数 =====================
+function showToast(msg) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  c.appendChild(t); setTimeout(() => t.remove(), 2500);
+}
+
+function rankingScore(rank) {
+  if (!rank) return null;
+  return Math.max(1, 11 - Math.ceil(rank / 10));
+}
+
+// ===================== 认证 =====================
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  currentUser = session?.user || null;
+  updateUserUI();
+}
+function updateUserUI() {
+  const label = document.getElementById('userLabel');
+  const loginBtn = document.getElementById('loginBtn');
+  if (currentUser) {
+    label.innerHTML = `👤 <strong>${currentUser.email}</strong>`;
+    loginBtn.textContent = '退出';
+  } else {
+    label.innerHTML = '未登录';
+    loginBtn.textContent = '登录 / 注册';
+  }
+}
+
+document.getElementById('loginBtn').addEventListener('click', () => {
+  if (currentUser) {
+    supabase.auth.signOut();
+    currentUser = null;
+    updateUserUI();
+    renderAll();
+  } else {
+    document.getElementById('authModal').style.display = 'flex';
+  }
+});
+document.getElementById('closeAuthBtn').addEventListener('click', () => {
+  document.getElementById('authModal').style.display = 'none';
+});
+document.getElementById('signInBtn').addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  if (!email || !password) return showToast('请输入邮箱和密码');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return showToast('登录失败: ' + error.message);
+  currentUser = data.user;
+  updateUserUI();
+  document.getElementById('authModal').style.display = 'none';
+  showToast('登录成功');
+  await loadAllData();
+  renderAll();
+});
+document.getElementById('signUpBtn').addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  if (!email || !password) return showToast('请输入邮箱和密码');
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) return showToast('注册失败: ' + error.message);
+  if (data?.user) {
+    currentUser = data.user;
+    updateUserUI();
+    document.getElementById('authModal').style.display = 'none';
+    showToast('注册成功，已自动登录');
+    await loadAllData();
+    renderAll();
+  }
+});
+
+// ===================== 数据加载 =====================
+async function loadAllData() {
+  if (!currentUser) return;
+  const { data: teams } = await supabase.from('teams').select('*').order('id');
+  cachedTeams = teams || [];
+  const { data: groups } = await supabase.from('groups').select('*');
+  cachedGroups = {};
+  if (groups) groups.forEach(g => {
+    if (!cachedGroups[g.group_letter]) cachedGroups[g.group_letter] = [];
+    cachedGroups[g.group_letter][g.slot_index] = g.team_name;
+  });
+  const { data: preds } = await supabase.from('predictions').select('*').eq('user_id', currentUser.id);
+  cachedPredictions = {};
+  if (preds) preds.forEach(p => {
+    cachedPredictions[p.match_id] = {
+      result: p.predicted_result,
+      homeRatings: p.home_ratings || {},
+      awayRatings: p.away_ratings || {}
+    };
+  });
+  const { data: results } = await supabase.from('match_results').select('*');
+  cachedResults = {};
+  if (results) results.forEach(r => cachedResults[r.match_id] = r.result);
+}
+
+// 生成小组赛匹配
+function generateMatches() {
+  const matches = [];
+  let mid = 1;
+  Object.keys(cachedGroups).sort().forEach(group => {
+    const teams = cachedGroups[group].filter(Boolean);
+    if (teams.length !== 4) return;
+    const patterns = [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]];
+    patterns.forEach(([a,b], i) => {
+      matches.push({
+        id: mid++,
+        type: 'group',
+        group,
+        round: `第${Math.floor(i/2)+1}轮`,
+        home: teams[a],
+        away: teams[b]
+      });
+    });
+  });
+  return matches;
+}
+
+// ===================== 页面渲染 =====================
+async function renderAll() {
+  updateGroupSubtabs();
+  if (!currentUser) {
+    document.getElementById('contentArea').innerHTML = '<div class="empty-state" style="text-align:center;padding:40px;">请先登录</div>';
+    return;
+  }
+  await loadAllData();
+  const area = document.getElementById('contentArea');
+  switch (currentTab) {
+    case 'team-ratings':
+      if (currentRatingSubtab === 'overview') renderTeamOverview(area);
+      else if (currentRatingSubtab === 'world-ranking') renderTeamEntry(area);
+      else renderGrouping(area);
+      break;
+    case 'group-stage': renderGroupStage(area); break;
+    case 'knockout-stage': area.innerHTML = '<div class="section-title">⚔️ 淘汰赛</div><div style="text-align:center;padding:40px;">淘汰赛将在小组赛结束后生成</div>'; break;
+    case 'my-predictions': renderMyPredictions(area); break;
+    case 'results-input': renderGroupStage(area, true); break;
+    case 'leaderboard-tab': renderLeaderboard(area); break;
+    default: area.innerHTML = '';
+  }
+}
+
+// 子标签切换
+function updateGroupSubtabs() {
+  const sub = document.getElementById('groupSubtabs');
+  if (currentTab === 'group-stage' || currentTab === 'results-input') {
+    const groups = Object.keys(cachedGroups).sort();
+    if (!groups.includes(currentGroup)) currentGroup = groups[0] || 'A';
+    sub.innerHTML = groups.map(g => `<button class="group-subtab${g===currentGroup?' active':''}" data-group="${g}">${g}组</button>`).join('');
+    sub.querySelectorAll('.group-subtab').forEach(b => b.addEventListener('click', () => {
+      sub.querySelectorAll('.group-subtab').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentGroup = b.dataset.group;
+      renderAll();
+    }));
+    sub.style.display = 'flex';
+  } else if (currentTab === 'team-ratings') {
+    sub.style.display = 'flex';
+    sub.innerHTML = `
+      <button class="group-subtab${currentRatingSubtab==='overview'?' active':''}" data-rating="overview">📊 综合评分</button>
+      <button class="group-subtab${currentRatingSubtab==='world-ranking'?' active':''}" data-rating="world-ranking">✏️ 球队录入</button>
+      <button class="group-subtab${currentRatingSubtab==='grouping'?' active':''}" data-rating="grouping">📋 小组赛分组</button>
+    `;
+    sub.querySelectorAll('.group-subtab').forEach(b => b.addEventListener('click', () => {
+      sub.querySelectorAll('.group-subtab').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentRatingSubtab = b.dataset.rating;
+      renderAll();
+    }));
+  } else sub.style.display = 'none';
+}
+
+// 主标签点击
+document.getElementById('mainTabs').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn'); if (!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTab = btn.dataset.tab;
+  if (currentTab === 'team-ratings') currentRatingSubtab = 'overview';
+  renderAll();
+});
+
+// ===================== 小组赛渲染 =====================
+function renderGroupStage(area, resultsMode = false) {
+  const matches = generateMatches().filter(m => m.group === currentGroup);
+  if (!matches.length) {
+    area.innerHTML = `<div class="section-title">📋 ${currentGroup}组</div><div style="text-align:center;padding:40px;">暂无比赛</div>`;
+    return;
+  }
+  area.innerHTML = `<div class="section-title">📋 ${currentGroup}组 小组赛</div><div class="matches-grid" id="matchGrid"></div>`;
+  const grid = document.getElementById('matchGrid');
+  grid.innerHTML = matches.map(m => {
+    const rankHome = cachedTeams.find(t => t.name === m.home)?.world_rank;
+    const rankAway = cachedTeams.find(t => t.name === m.away)?.world_rank;
+    const actual = cachedResults[m.id];
+    const pred = cachedPredictions[m.id];
+    const predResult = pred?.result || null;
+    let badge = '', cardClass = '';
+    if (!resultsMode && predResult) {
+      if (actual) {
+        badge = predResult === actual ? '<span class="badge badge-correct">✅</span>' : '<span class="badge badge-wrong">❌</span>';
+        cardClass = predResult === actual ? 'correct-prediction' : 'wrong-prediction';
+      } else badge = '<span class="badge badge-pending">⏳</span>';
+    }
+    const resultHTML = actual ? `<div class="result-actual">实际：${actual==='home'?m.home+'胜':actual==='away'?m.away+'胜':'平局'}</div>` : '';
+    return `
+    <div class="match-card ${cardClass}" data-match-id="${m.id}">
+      <div class="match-card-header"><span>${m.round}</span><span>#${m.id}</span>${badge}</div>
+      <div class="teams-row">
+        <span class="team-name">${m.home}${rankHome?` <span class="team-rank">(排名${rankHome})</span>`:''}</span>
+        <span class="vs-badge">VS</span>
+        <span class="team-name">${m.away}${rankAway?` <span class="team-rank">(排名${rankAway})</span>`:''}</span>
+      </div>
+      ${resultsMode ? `<div class="result-actual">${actual ? '已录入' : '未录入'}</div>` : resultHTML}
+      <div class="prediction-row">
+        <button class="pred-option ${predResult==='home'?'selected':''}" data-pick="home">主胜</button>
+        <button class="pred-option ${predResult==='draw'?'selected':''}" data-pick="draw">平</button>
+        <button class="pred-option ${predResult==='away'?'selected-away':''}" data-pick="away">客胜</button>
+      </div>
+      ${!resultsMode ? `
+      <div class="ratings-toggle"><button class="btn btn-xs btn-outline toggle-ratings-btn">📊 评分</button></div>
+      <div class="ratings-panel">
+        <div style="display:flex; gap:16px;">
+          <div><h4>🏠 ${m.home}</h4>${generateRatingInputs(m.id, 'home', pred?.homeRatings)}<div class="total-score">${calcTotal(pred?.homeRatings)}</div></div>
+          <div><h4>🏟️ ${m.away}</h4>${generateRatingInputs(m.id, 'away', pred?.awayRatings)}<div class="total-score">${calcTotal(pred?.awayRatings)}</div></div>
+        </div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  // 事件绑定
+  grid.querySelectorAll('.pred-option').forEach(btn => btn.addEventListener('click', async function() {
+    if (!currentUser) return showToast('请先登录');
+    const matchId = parseInt(this.closest('.match-card').dataset.matchId);
+    const pick = this.dataset.pick;
+    const pred = cachedPredictions[matchId] || { result: null, homeRatings: {}, awayRatings: {} };
+    pred.result = pick;
+    await supabase.from('predictions').upsert({
+      user_id: currentUser.id,
+      match_id: matchId,
+      predicted_result: pick,
+      home_ratings: pred.homeRatings || {},
+      away_ratings: pred.awayRatings || {},
+      updated_at: new Date()
+    }, { onConflict: 'user_id, match_id' });
+    cachedPredictions[matchId] = pred;
+    showToast('预测已保存');
+    renderAll();
+  }));
+  grid.querySelectorAll('.toggle-ratings-btn').forEach(btn => btn.addEventListener('click', function() {
+    this.closest('.match-card').querySelector('.ratings-panel').classList.toggle('open');
+  }));
+  grid.querySelectorAll('.rating-input').forEach(inp => inp.addEventListener('change', async function() {
+    if (!currentUser) return;
+    const matchId = parseInt(this.dataset.match);
+    const side = this.dataset.side;
+    const key = this.dataset.key;
+    let val = parseFloat(this.value);
+    if (isNaN(val)) val = null; else val = Math.min(10, Math.max(0, val));
+    const pred = cachedPredictions[matchId] || { result: null, homeRatings: {}, awayRatings: {} };
+    if (side === 'home') pred.homeRatings[key] = val; else pred.awayRatings[key] = val;
+    await supabase.from('predictions').upsert({
+      user_id: currentUser.id,
+      match_id: matchId,
+      predicted_result: pred.result,
+      home_ratings: pred.homeRatings || {},
+      away_ratings: pred.awayRatings || {},
+      updated_at: new Date()
+    }, { onConflict: 'user_id, match_id' });
+    cachedPredictions[matchId] = pred;
+    this.value = val ?? '';
+  }));
+}
+
+function generateRatingInputs(mid, side, ratings) {
+  const labels = ['团队默契','进攻欲望','防守强度','个人能力','守门员表现','阵容踢法'];
+  const keys = ['teamwork','attack','defense','individual','goalkeeper','formation'];
+  return keys.map((k,i) => {
+    const v = ratings?.[k] ?? '';
+    return `<div class="rating-row"><span class="rating-label">${labels[i]}</span><input class="rating-input" type="number" min="0" max="10" step="0.5" value="${v}" data-match="${mid}" data-side="${side}" data-key="${k}"></div>`;
+  }).join('');
+}
+function calcTotal(ratings) {
+  if (!ratings) return '总分：-';
+  const keys = ['teamwork','attack','defense','individual','goalkeeper','formation'];
+  let sum = 0, cnt = 0;
+  keys.forEach(k => { if (typeof ratings[k] === 'number') { sum += ratings[k]; cnt++; } });
+  return cnt > 0 ? `总分：${sum.toFixed(1)}/60` : '总分：-';
+}
+
+// ===================== 球队录入 =====================
+function renderTeamEntry(area) {
+  area.innerHTML = `<div class="section-title"><span>✏️ 球队录入 (${cachedTeams.length}队)</span>
+    <div><button class="btn btn-outline btn-sm" id="addTeamBtn">➕ 添加</button>
+    <button class="btn btn-primary btn-sm" id="saveTeamsBtn" ${teamsModified?'':'disabled'}>💾 保存</button></div></div>
+    <div class="team-cards-grid">${cachedTeams.map((t,i) => {
+      const score = rankingScore(t.world_rank);
+      return `<div class="team-card" data-id="${t.id}"><div class="team-card-header"><span class="team-card-num">#${i+1}</span><button class="delete-team-btn">✕</button></div>
+        <input class="name-input" value="${t.name}" placeholder="球队名称">
+        <input class="rank-input" type="number" min="1" max="100" placeholder="世界排名" value="${t.world_rank||''}">
+        <span>${score!==null?score+'分':'-'}</span></div>`;
+    }).join('')}</div>`;
+  document.getElementById('addTeamBtn').addEventListener('click', async () => {
+    await supabase.from('teams').insert({ name: '新球队', world_rank: null });
+    await loadAllData(); teamsModified = true; renderAll();
+  });
+  document.getElementById('saveTeamsBtn').addEventListener('click', async () => {
+    teamsModified = false; renderAll(); showToast('保存成功');
+  });
+  area.querySelectorAll('.name-input').forEach(inp => inp.addEventListener('input', async function() {
+    const card = this.closest('.team-card'); const id = parseInt(card.dataset.id);
+    await supabase.from('teams').update({ name: this.value || '未命名' }).eq('id', id);
+    teamsModified = true; renderAll();
+  }));
+  area.querySelectorAll('.rank-input').forEach(inp => inp.addEventListener('input', async function() {
+    const card = this.closest('.team-card'); const id = parseInt(card.dataset.id);
+    const v = parseInt(this.value); const rank = (v>=1&&v<=100) ? v : null;
+    await supabase.from('teams').update({ world_rank: rank }).eq('id', id);
+    teamsModified = true; renderAll();
+  }));
+  area.querySelectorAll('.delete-team-btn').forEach(btn => btn.addEventListener('click', async function() {
+    if (cachedTeams.length <= 4) return showToast('至少保留4队');
+    const card = this.closest('.team-card'); const id = parseInt(card.dataset.id);
+    await supabase.from('teams').delete().eq('id', id);
+    await loadAllData(); teamsModified = true; renderAll();
+  }));
+}
+
+// ===================== 小组赛分组 =====================
+function renderGrouping(area) {
+  const used = new Set();
+  Object.values(cachedGroups).forEach(arr => arr.forEach(t => { if (t) used.add(t); }));
+  const groupKeys = Object.keys(cachedGroups).sort();
+  area.innerHTML = `<div class="section-title"><span>📋 小组赛分组</span>
+    <div><button class="btn btn-outline btn-sm" id="addGroupBtn">➕ 添加分组</button>
+    <button class="btn btn-primary btn-sm" id="saveGroupsBtn" ${groupsModified?'':'disabled'}>💾 保存</button></div></div>
+    <div class="groups-grid">${groupKeys.map(g => {
+      const sel = cachedGroups[g] || [];
+      return `<div class="group-card"><h4><span>${g} 组</span><button class="delete-group-btn" data-group="${g}">✕</button></h4>
+        ${[0,1,2,3].map(i => {
+          const cur = sel[i] || '';
+          const avail = cachedTeams.map(t=>t.name).filter(t => !used.has(t) || t===cur);
+          return `<select class="group-select" data-group="${g}" data-index="${i}"><option value="">--</option>${avail.map(t=>`<option value="${t}" ${t===cur?'selected':''}>${t}</option>`).join('')}</select>`;
+        }).join('')}</div>`;
+    }).join('')}</div>`;
+  document.getElementById('addGroupBtn').addEventListener('click', async () => {
+    const keys = Object.keys(cachedGroups).sort();
+    if (keys.length >= 12) return showToast('最多12组');
+    const next = GROUP_LETTERS.find(l => !keys.includes(l));
+    if (!next) return;
+    cachedGroups[next] = [];
+    await supabase.from('groups').delete().eq('group_letter', next); // 清理可能残留
+    groupsModified = true; renderAll();
+  });
+  document.getElementById('saveGroupsBtn').addEventListener('click', async () => {
+    // 将当前DOM状态同步到数据库
+    for (const card of area.querySelectorAll('.group-card')) {
+      const g = card.querySelector('h4 span').textContent.charAt(0);
+      const selects = card.querySelectorAll('select');
+      const teams = Array.from(selects).map(s => s.value).filter(Boolean);
+      await supabase.from('groups').delete().eq('group_letter', g);
+      const inserts = teams.map((t, i) => ({ group_letter: g, team_name: t, slot_index: i }));
+      if (inserts.length) await supabase.from('groups').insert(inserts);
+    }
+    await loadAllData(); groupsModified = false; renderAll(); showToast('分组已保存');
+  });
+  area.querySelectorAll('.delete-group-btn').forEach(btn => btn.addEventListener('click', async function(e){
+    e.stopPropagation();
+    const g = this.dataset.group;
+    if (Object.keys(cachedGroups).length <= 1) return showToast('至少1组');
+    if (!confirm(`删除 ${g} 组？`)) return;
+    await supabase.from('groups').delete().eq('group_letter', g);
+    await loadAllData();
+    // 字母递进
+    const remaining = Object.keys(cachedGroups).sort().map(k => cachedGroups[k]);
+    cachedGroups = {};
+    remaining.forEach((teams, i) => { cachedGroups[GROUP_LETTERS[i]] = teams; });
+    // 同步数据库
+    for (const [letter, teams] of Object.entries(cachedGroups)) {
+      await supabase.from('groups').delete().eq('group_letter', letter);
+      const inserts = teams.map((t, i) => ({ group_letter: letter, team_name: t, slot_index: i }));
+      if (inserts.length) await supabase.from('groups').insert(inserts);
+    }
+    groupsModified = true; renderAll();
+  }));
+  area.querySelectorAll('select.group-select').forEach(select => select.addEventListener('change', function() {
+    const g = this.dataset.group; const idx = parseInt(this.dataset.index);
+    if (!cachedGroups[g]) cachedGroups[g] = [];
+    cachedGroups[g][idx] = this.value || null;
+    cachedGroups[g] = cachedGroups[g].filter(Boolean);
+    groupsModified = true;
+    renderAll();
+  }));
+}
+
+// ===================== 综合评分 =====================
+function renderTeamOverview(area) {
+  const matches = generateMatches();
+  const teamScores = {};
+  cachedTeams.forEach(t => teamScores[t.name] = { total: 0, count: 0 });
+  Object.entries(cachedPredictions).forEach(([mid, pred]) => {
+    const match = matches.find(m => m.id === parseInt(mid));
+    if (!match) return;
+    if (pred.homeRatings) addScore(teamScores, match.home, pred.homeRatings);
+    if (pred.awayRatings) addScore(teamScores, match.away, pred.awayRatings);
+  });
+  const list = Object.entries(teamScores).map(([name, data]) => ({
+    name, avg: data.count > 0 ? data.total / data.count : 0, count: data.count
+  }));
+  const favs = []; // 收藏功能可后续添加
+  const sorted = [...list.filter(t => favs.includes(t.name)).sort((a,b)=>b.avg-a.avg), ...list.filter(t => !favs.includes(t.name)).sort((a,b)=>b.avg-a.avg)];
+  area.innerHTML = `<div class="section-title">📊 综合评分</div><div class="overview-list">${sorted.map((t,i) => `
+    <div class="overview-item"><span class="overview-rank">${i+1}</span><span class="overview-name">${t.name}</span><span class="overview-score">${t.count>0?t.avg.toFixed(1):'-'}分</span><span style="color:var(--text3);">${t.count}场</span></div>
+  `).join('')}</div>`;
+}
+function addScore(scores, team, ratings) {
+  if (!scores[team]) scores[team] = { total: 0, count: 0 };
+  const keys = ['teamwork','attack','defense','individual','goalkeeper','formation'];
+  let sum = 0;
+  keys.forEach(k => { if (typeof ratings[k] === 'number') sum += ratings[k]; });
+  scores[team].total += sum;
+  scores[team].count++;
+}
+
+// ===================== 其他页面占位 =====================
+function renderMyPredictions(area) {
+  const matches = generateMatches();
+  const list = Object.entries(cachedPredictions).map(([mid, pred]) => {
+    const m = matches.find(m => m.id === parseInt(mid));
+    return m ? { match: m, pred } : null;
+  }).filter(Boolean);
+  area.innerHTML = `<div class="section-title">✅ 我的预测</div><div class="matches-grid">${list.map(({match, pred}) => {
+    const actual = cachedResults[match.id];
+    let badge = '';
+    if (actual && pred.result === actual) badge = '<span class="badge badge-correct">✅</span>';
+    else if (actual) badge = '<span class="badge badge-wrong">❌</span>';
+    else badge = '<span class="badge badge-pending">⏳</span>';
+    return `<div class="match-card"><div>${match.group}组 ${match.round}</div><div>${match.home} VS ${match.away}</div><div>预测：${pred.result==='home'?match.home+'胜':pred.result==='away'?match.away+'胜':'平局'} | 实际：${actual? (actual==='home'?match.home+'胜':actual==='away'?match.away+'胜':'平局'):'未出'} ${badge}</div></div>`;
+  }).join('')}</div>`;
+}
+
+async function renderLeaderboard(area) {
+  // 统计所有用户的预测正确数
+  const { data: preds } = await supabase.from('predictions').select('user_id, match_id, predicted_result');
+  const { data: results } = await supabase.from('match_results').select('*');
+  const resMap = {};
+  if (results) results.forEach(r => resMap[r.match_id] = r.result);
+  const userScores = {};
+  if (preds) preds.forEach(p => {
+    if (!userScores[p.user_id]) userScores[p.user_id] = { correct: 0, total: 0 };
+    userScores[p.user_id].total++;
+    if (resMap[p.match_id] && p.predicted_result === resMap[p.match_id]) userScores[p.user_id].correct++;
+  });
+  const sorted = Object.entries(userScores).sort((a,b) => b[1].correct - a[1].correct);
+  area.innerHTML = `<div class="section-title">🏅 排行榜</div><div class="overview-list">${sorted.map(([uid, stats], i) => {
+    return `<div class="overview-item"><span class="overview-rank">${i+1}</span><span>${uid}</span><span>${stats.correct}/${stats.total}</span></div>`;
+  }).join('')}</div>`;
+}
+
+// ===================== 初始化 =====================
+async function init() {
+  await checkAuth();
+  if (currentUser) await loadAllData();
+  renderAll();
+  // 监听认证变化
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN') {
+      currentUser = session.user;
+      updateUserUI();
+      await loadAllData();
+      renderAll();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      cachedTeams = []; cachedGroups = {}; cachedPredictions = {}; cachedResults = {};
+      updateUserUI();
+      renderAll();
+    }
+  });
+}
+init();
+</script>
+</body>
+</html> 
