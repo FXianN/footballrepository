@@ -6,33 +6,15 @@
   <title>🏆 2026世界杯预测平台 · 多人版</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root {
-      --bg: #0a0e14;
-      --surface: #131820;
-      --surface2: #1a1f2b;
-      --surface3: #1e2432;
-      --gold: #d4a843;
-      --gold-light: #f0d078;
-      --text: #e0e0e0;
-      --text2: #a0a8b4;
-      --text3: #6b7280;
-      --border: #2a3040;
-      --accent: #3b82f6;
-      --accent2: #8b5cf6;
-      --radius: 12px;
-      --shadow: 0 4px 24px rgba(0,0,0,0.4);
-    }
+    /* --- 样式与之前完全一致，此处省略以节省篇幅 --- */
+    :root { --bg: #0a0e14; --surface: #131820; --surface2: #1a1f2b; --surface3: #1e2432; --gold: #d4a843; --gold-light: #f0d078; --text: #e0e0e0; --text2: #a0a8b4; --text3: #6b7280; --border: #2a3040; --accent: #3b82f6; --accent2: #8b5cf6; --radius: 12px; --shadow: 0 4px 24px rgba(0,0,0,0.4); }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6;
-    }
+    body { font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
     .header { background: var(--surface); border-bottom:1px solid var(--border); padding:14px 20px; position:sticky; top:0; z-index:100; }
     .header-inner { max-width:1300px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
     .logo { font-size:1.4rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:10px; }
     .user-area { display:flex; align-items:center; gap:10px; }
-    .user-area span { color:var(--text2); }
-    .btn { padding:8px 18px; border-radius:20px; border:none; cursor:pointer; font-weight:600; font-size:0.9rem; transition:0.2s; white-space:nowrap; }
+    .btn { padding:8px 18px; border-radius:20px; border:none; cursor:pointer; font-weight:600; font-size:0.9rem; transition:0.2s; }
     .btn-primary { background:var(--accent); color:#fff; }
     .btn-outline { background:transparent; border:1.5px solid var(--border); color:var(--text); }
     .btn-sm { padding:5px 12px; font-size:0.78rem; border-radius:14px; }
@@ -40,10 +22,10 @@
     .btn:disabled { opacity:0.5; cursor:not-allowed; }
     .container { max-width:1300px; margin:0 auto; padding:16px 20px; }
     .tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:20px; background:var(--surface); border-radius:var(--radius); padding:5px; border:1px solid var(--border); }
-    .tab-btn { padding:10px 20px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-radius:8px; font-weight:500; font-size:0.9rem; white-space:nowrap; }
+    .tab-btn { padding:10px 20px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-radius:8px; font-weight:500; font-size:0.9rem; }
     .tab-btn.active { background:var(--surface3); color:#fff; font-weight:700; }
     .group-subtabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:16px; background:var(--surface); border-radius:var(--radius); padding:5px; border:1px solid var(--border); }
-    .group-subtab { padding:8px 16px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-radius:8px; font-weight:500; font-size:0.85rem; white-space:nowrap; }
+    .group-subtab { padding:8px 16px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-radius:8px; font-weight:500; font-size:0.85rem; }
     .group-subtab.active { background:var(--accent); color:#fff; }
     .section-title { font-size:1.15rem; font-weight:700; margin-bottom:14px; color:#fff; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:space-between; }
     .matches-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(380px,1fr)); gap:12px; }
@@ -111,7 +93,7 @@
     <div class="user-area">
       <span id="userLabel">未登录</span>
       <button class="btn btn-outline btn-sm" id="loginBtn">登录 / 注册</button>
-      <button class="btn btn-outline btn-sm" onclick="currentTab='leaderboard-tab';renderAll();">📊 排行榜</button>
+      <button class="btn btn-outline btn-sm" id="leaderboardBtn">📊 排行榜</button>
     </div>
   </div>
 </div>
@@ -149,7 +131,7 @@ const SUPABASE_URL = 'https://lxkfbjipjtzexljcnglx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_mqgPJ49HHSf8NbMWj6AVYw_KoCwyfGM';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ===================== 全局变量 =====================
+// ===================== 全局状态 =====================
 let currentUser = null;
 let currentTab = 'group-stage';
 let currentGroup = 'A';
@@ -165,9 +147,12 @@ const GROUP_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 // ===================== 工具函数 =====================
 function showToast(msg) {
-  const c = document.getElementById('toastContainer');
-  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
-  c.appendChild(t); setTimeout(() => t.remove(), 2500);
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
 }
 
 function rankingScore(rank) {
@@ -175,12 +160,72 @@ function rankingScore(rank) {
   return Math.max(1, 11 - Math.ceil(rank / 10));
 }
 
-// ===================== 认证 =====================
-async function checkAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
-  currentUser = session?.user || null;
-  updateUserUI();
+// ===================== 认证与事件绑定（确保DOM存在） =====================
+function bindGlobalEvents() {
+  document.getElementById('loginBtn').addEventListener('click', () => {
+    if (currentUser) {
+      supabase.auth.signOut();
+      currentUser = null;
+      updateUserUI();
+      renderAll();
+    } else {
+      document.getElementById('authModal').style.display = 'flex';
+    }
+  });
+
+  document.getElementById('leaderboardBtn').addEventListener('click', () => {
+    currentTab = 'leaderboard-tab';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const leaderboardTab = document.querySelector('[data-tab="leaderboard-tab"]');
+    if (leaderboardTab) leaderboardTab.classList.add('active');
+    renderAll();
+  });
+
+  document.getElementById('closeAuthBtn').addEventListener('click', () => {
+    document.getElementById('authModal').style.display = 'none';
+  });
+
+  document.getElementById('signInBtn').addEventListener('click', async () => {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+    if (!email || !password) return showToast('请输入邮箱和密码');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return showToast('登录失败: ' + error.message);
+    currentUser = data.user;
+    updateUserUI();
+    document.getElementById('authModal').style.display = 'none';
+    showToast('登录成功');
+    await loadAllData();
+    renderAll();
+  });
+
+  document.getElementById('signUpBtn').addEventListener('click', async () => {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+    if (!email || !password) return showToast('请输入邮箱和密码');
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return showToast('注册失败: ' + error.message);
+    if (data?.user) {
+      currentUser = data.user;
+      updateUserUI();
+      document.getElementById('authModal').style.display = 'none';
+      showToast('注册成功，已自动登录');
+      await loadAllData();
+      renderAll();
+    }
+  });
+
+  document.getElementById('mainTabs').addEventListener('click', e => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.tab;
+    if (currentTab === 'team-ratings') currentRatingSubtab = 'overview';
+    renderAll();
+  });
 }
+
 function updateUserUI() {
   const label = document.getElementById('userLabel');
   const loginBtn = document.getElementById('loginBtn');
@@ -193,74 +238,36 @@ function updateUserUI() {
   }
 }
 
-document.getElementById('loginBtn').addEventListener('click', () => {
-  if (currentUser) {
-    supabase.auth.signOut();
-    currentUser = null;
-    updateUserUI();
-    renderAll();
-  } else {
-    document.getElementById('authModal').style.display = 'flex';
-  }
-});
-document.getElementById('closeAuthBtn').addEventListener('click', () => {
-  document.getElementById('authModal').style.display = 'none';
-});
-document.getElementById('signInBtn').addEventListener('click', async () => {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value.trim();
-  if (!email || !password) return showToast('请输入邮箱和密码');
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return showToast('登录失败: ' + error.message);
-  currentUser = data.user;
-  updateUserUI();
-  document.getElementById('authModal').style.display = 'none';
-  showToast('登录成功');
-  await loadAllData();
-  renderAll();
-});
-document.getElementById('signUpBtn').addEventListener('click', async () => {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value.trim();
-  if (!email || !password) return showToast('请输入邮箱和密码');
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) return showToast('注册失败: ' + error.message);
-  if (data?.user) {
-    currentUser = data.user;
-    updateUserUI();
-    document.getElementById('authModal').style.display = 'none';
-    showToast('注册成功，已自动登录');
-    await loadAllData();
-    renderAll();
-  }
-});
-
 // ===================== 数据加载 =====================
 async function loadAllData() {
   if (!currentUser) return;
-  const { data: teams } = await supabase.from('teams').select('*').order('id');
-  cachedTeams = teams || [];
-  const { data: groups } = await supabase.from('groups').select('*');
-  cachedGroups = {};
-  if (groups) groups.forEach(g => {
-    if (!cachedGroups[g.group_letter]) cachedGroups[g.group_letter] = [];
-    cachedGroups[g.group_letter][g.slot_index] = g.team_name;
-  });
-  const { data: preds } = await supabase.from('predictions').select('*').eq('user_id', currentUser.id);
-  cachedPredictions = {};
-  if (preds) preds.forEach(p => {
-    cachedPredictions[p.match_id] = {
-      result: p.predicted_result,
-      homeRatings: p.home_ratings || {},
-      awayRatings: p.away_ratings || {}
-    };
-  });
-  const { data: results } = await supabase.from('match_results').select('*');
-  cachedResults = {};
-  if (results) results.forEach(r => cachedResults[r.match_id] = r.result);
+  try {
+    const { data: teams } = await supabase.from('teams').select('*').order('id');
+    cachedTeams = teams || [];
+    const { data: groups } = await supabase.from('groups').select('*');
+    cachedGroups = {};
+    if (groups) groups.forEach(g => {
+      if (!cachedGroups[g.group_letter]) cachedGroups[g.group_letter] = [];
+      cachedGroups[g.group_letter][g.slot_index] = g.team_name;
+    });
+    const { data: preds } = await supabase.from('predictions').select('*').eq('user_id', currentUser.id);
+    cachedPredictions = {};
+    if (preds) preds.forEach(p => {
+      cachedPredictions[p.match_id] = {
+        result: p.predicted_result,
+        homeRatings: p.home_ratings || {},
+        awayRatings: p.away_ratings || {}
+      };
+    });
+    const { data: results } = await supabase.from('match_results').select('*');
+    cachedResults = {};
+    if (results) results.forEach(r => cachedResults[r.match_id] = r.result);
+  } catch (err) {
+    console.error('数据加载失败', err);
+    showToast('数据加载失败，请检查网络或稍后重试');
+  }
 }
 
-// 生成小组赛匹配
 function generateMatches() {
   const matches = [];
   let mid = 1;
@@ -282,7 +289,7 @@ function generateMatches() {
   return matches;
 }
 
-// ===================== 页面渲染 =====================
+// ===================== 渲染主函数 =====================
 async function renderAll() {
   updateGroupSubtabs();
   if (!currentUser) {
@@ -291,6 +298,7 @@ async function renderAll() {
   }
   await loadAllData();
   const area = document.getElementById('contentArea');
+  if (!area) return;
   switch (currentTab) {
     case 'team-ratings':
       if (currentRatingSubtab === 'overview') renderTeamOverview(area);
@@ -306,9 +314,9 @@ async function renderAll() {
   }
 }
 
-// 子标签切换
 function updateGroupSubtabs() {
   const sub = document.getElementById('groupSubtabs');
+  if (!sub) return;
   if (currentTab === 'group-stage' || currentTab === 'results-input') {
     const groups = Object.keys(cachedGroups).sort();
     if (!groups.includes(currentGroup)) currentGroup = groups[0] || 'A';
@@ -333,28 +341,21 @@ function updateGroupSubtabs() {
       currentRatingSubtab = b.dataset.rating;
       renderAll();
     }));
-  } else sub.style.display = 'none';
+  } else {
+    sub.style.display = 'none';
+  }
 }
 
-// 主标签点击
-document.getElementById('mainTabs').addEventListener('click', e => {
-  const btn = e.target.closest('.tab-btn'); if (!btn) return;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentTab = btn.dataset.tab;
-  if (currentTab === 'team-ratings') currentRatingSubtab = 'overview';
-  renderAll();
-});
-
-// ===================== 小组赛渲染 =====================
+// ===================== 各页面渲染 =====================
 function renderGroupStage(area, resultsMode = false) {
   const matches = generateMatches().filter(m => m.group === currentGroup);
   if (!matches.length) {
-    area.innerHTML = `<div class="section-title">📋 ${currentGroup}组</div><div style="text-align:center;padding:40px;">暂无比赛</div>`;
+    area.innerHTML = `<div class="section-title">📋 ${currentGroup}组</div><div style="text-align:center;padding:40px;">暂无比赛，请先在“小组赛分组”中设置球队</div>`;
     return;
   }
   area.innerHTML = `<div class="section-title">📋 ${currentGroup}组 小组赛</div><div class="matches-grid" id="matchGrid"></div>`;
   const grid = document.getElementById('matchGrid');
+  if (!grid) return;
   grid.innerHTML = matches.map(m => {
     const rankHome = cachedTeams.find(t => t.name === m.home)?.world_rank;
     const rankAway = cachedTeams.find(t => t.name === m.away)?.world_rank;
@@ -394,48 +395,58 @@ function renderGroupStage(area, resultsMode = false) {
     </div>`;
   }).join('');
 
-  // 事件绑定
+  bindMatchEvents(grid, resultsMode);
+}
+
+function bindMatchEvents(grid, resultsMode) {
   grid.querySelectorAll('.pred-option').forEach(btn => btn.addEventListener('click', async function() {
     if (!currentUser) return showToast('请先登录');
     const matchId = parseInt(this.closest('.match-card').dataset.matchId);
     const pick = this.dataset.pick;
     const pred = cachedPredictions[matchId] || { result: null, homeRatings: {}, awayRatings: {} };
     pred.result = pick;
-    await supabase.from('predictions').upsert({
-      user_id: currentUser.id,
-      match_id: matchId,
-      predicted_result: pick,
-      home_ratings: pred.homeRatings || {},
-      away_ratings: pred.awayRatings || {},
-      updated_at: new Date()
-    }, { onConflict: 'user_id, match_id' });
-    cachedPredictions[matchId] = pred;
-    showToast('预测已保存');
-    renderAll();
+    try {
+      await supabase.from('predictions').upsert({
+        user_id: currentUser.id,
+        match_id: matchId,
+        predicted_result: pick,
+        home_ratings: pred.homeRatings || {},
+        away_ratings: pred.awayRatings || {},
+        updated_at: new Date()
+      }, { onConflict: 'user_id, match_id' });
+      cachedPredictions[matchId] = pred;
+      showToast('预测已保存');
+      renderAll();
+    } catch (err) { showToast('保存失败: ' + err.message); }
   }));
-  grid.querySelectorAll('.toggle-ratings-btn').forEach(btn => btn.addEventListener('click', function() {
-    this.closest('.match-card').querySelector('.ratings-panel').classList.toggle('open');
-  }));
-  grid.querySelectorAll('.rating-input').forEach(inp => inp.addEventListener('change', async function() {
-    if (!currentUser) return;
-    const matchId = parseInt(this.dataset.match);
-    const side = this.dataset.side;
-    const key = this.dataset.key;
-    let val = parseFloat(this.value);
-    if (isNaN(val)) val = null; else val = Math.min(10, Math.max(0, val));
-    const pred = cachedPredictions[matchId] || { result: null, homeRatings: {}, awayRatings: {} };
-    if (side === 'home') pred.homeRatings[key] = val; else pred.awayRatings[key] = val;
-    await supabase.from('predictions').upsert({
-      user_id: currentUser.id,
-      match_id: matchId,
-      predicted_result: pred.result,
-      home_ratings: pred.homeRatings || {},
-      away_ratings: pred.awayRatings || {},
-      updated_at: new Date()
-    }, { onConflict: 'user_id, match_id' });
-    cachedPredictions[matchId] = pred;
-    this.value = val ?? '';
-  }));
+
+  if (!resultsMode) {
+    grid.querySelectorAll('.toggle-ratings-btn').forEach(btn => btn.addEventListener('click', function() {
+      this.closest('.match-card').querySelector('.ratings-panel').classList.toggle('open');
+    }));
+    grid.querySelectorAll('.rating-input').forEach(inp => inp.addEventListener('change', async function() {
+      if (!currentUser) return;
+      const matchId = parseInt(this.dataset.match);
+      const side = this.dataset.side;
+      const key = this.dataset.key;
+      let val = parseFloat(this.value);
+      if (isNaN(val)) val = null; else val = Math.min(10, Math.max(0, val));
+      const pred = cachedPredictions[matchId] || { result: null, homeRatings: {}, awayRatings: {} };
+      if (side === 'home') pred.homeRatings[key] = val; else pred.awayRatings[key] = val;
+      try {
+        await supabase.from('predictions').upsert({
+          user_id: currentUser.id,
+          match_id: matchId,
+          predicted_result: pred.result,
+          home_ratings: pred.homeRatings || {},
+          away_ratings: pred.awayRatings || {},
+          updated_at: new Date()
+        }, { onConflict: 'user_id, match_id' });
+        cachedPredictions[matchId] = pred;
+        this.value = val ?? '';
+      } catch (err) { console.error(err); }
+    }));
+  }
 }
 
 function generateRatingInputs(mid, side, ratings) {
@@ -454,7 +465,6 @@ function calcTotal(ratings) {
   return cnt > 0 ? `总分：${sum.toFixed(1)}/60` : '总分：-';
 }
 
-// ===================== 球队录入 =====================
 function renderTeamEntry(area) {
   area.innerHTML = `<div class="section-title"><span>✏️ 球队录入 (${cachedTeams.length}队)</span>
     <div><button class="btn btn-outline btn-sm" id="addTeamBtn">➕ 添加</button>
@@ -466,6 +476,7 @@ function renderTeamEntry(area) {
         <input class="rank-input" type="number" min="1" max="100" placeholder="世界排名" value="${t.world_rank||''}">
         <span>${score!==null?score+'分':'-'}</span></div>`;
     }).join('')}</div>`;
+
   document.getElementById('addTeamBtn').addEventListener('click', async () => {
     await supabase.from('teams').insert({ name: '新球队', world_rank: null });
     await loadAllData(); teamsModified = true; renderAll();
@@ -492,7 +503,6 @@ function renderTeamEntry(area) {
   }));
 }
 
-// ===================== 小组赛分组 =====================
 function renderGrouping(area) {
   const used = new Set();
   Object.values(cachedGroups).forEach(arr => arr.forEach(t => { if (t) used.add(t); }));
@@ -509,17 +519,16 @@ function renderGrouping(area) {
           return `<select class="group-select" data-group="${g}" data-index="${i}"><option value="">--</option>${avail.map(t=>`<option value="${t}" ${t===cur?'selected':''}>${t}</option>`).join('')}</select>`;
         }).join('')}</div>`;
     }).join('')}</div>`;
+
   document.getElementById('addGroupBtn').addEventListener('click', async () => {
     const keys = Object.keys(cachedGroups).sort();
     if (keys.length >= 12) return showToast('最多12组');
     const next = GROUP_LETTERS.find(l => !keys.includes(l));
     if (!next) return;
     cachedGroups[next] = [];
-    await supabase.from('groups').delete().eq('group_letter', next); // 清理可能残留
     groupsModified = true; renderAll();
   });
   document.getElementById('saveGroupsBtn').addEventListener('click', async () => {
-    // 将当前DOM状态同步到数据库
     for (const card of area.querySelectorAll('.group-card')) {
       const g = card.querySelector('h4 span').textContent.charAt(0);
       const selects = card.querySelectorAll('select');
@@ -537,11 +546,9 @@ function renderGrouping(area) {
     if (!confirm(`删除 ${g} 组？`)) return;
     await supabase.from('groups').delete().eq('group_letter', g);
     await loadAllData();
-    // 字母递进
     const remaining = Object.keys(cachedGroups).sort().map(k => cachedGroups[k]);
     cachedGroups = {};
     remaining.forEach((teams, i) => { cachedGroups[GROUP_LETTERS[i]] = teams; });
-    // 同步数据库
     for (const [letter, teams] of Object.entries(cachedGroups)) {
       await supabase.from('groups').delete().eq('group_letter', letter);
       const inserts = teams.map((t, i) => ({ group_letter: letter, team_name: t, slot_index: i }));
@@ -559,7 +566,6 @@ function renderGrouping(area) {
   }));
 }
 
-// ===================== 综合评分 =====================
 function renderTeamOverview(area) {
   const matches = generateMatches();
   const teamScores = {};
@@ -573,8 +579,7 @@ function renderTeamOverview(area) {
   const list = Object.entries(teamScores).map(([name, data]) => ({
     name, avg: data.count > 0 ? data.total / data.count : 0, count: data.count
   }));
-  const favs = []; // 收藏功能可后续添加
-  const sorted = [...list.filter(t => favs.includes(t.name)).sort((a,b)=>b.avg-a.avg), ...list.filter(t => !favs.includes(t.name)).sort((a,b)=>b.avg-a.avg)];
+  const sorted = list.sort((a,b) => b.avg - a.avg);
   area.innerHTML = `<div class="section-title">📊 综合评分</div><div class="overview-list">${sorted.map((t,i) => `
     <div class="overview-item"><span class="overview-rank">${i+1}</span><span class="overview-name">${t.name}</span><span class="overview-score">${t.count>0?t.avg.toFixed(1):'-'}分</span><span style="color:var(--text3);">${t.count}场</span></div>
   `).join('')}</div>`;
@@ -588,7 +593,6 @@ function addScore(scores, team, ratings) {
   scores[team].count++;
 }
 
-// ===================== 其他页面占位 =====================
 function renderMyPredictions(area) {
   const matches = generateMatches();
   const list = Object.entries(cachedPredictions).map(([mid, pred]) => {
@@ -606,7 +610,6 @@ function renderMyPredictions(area) {
 }
 
 async function renderLeaderboard(area) {
-  // 统计所有用户的预测正确数
   const { data: preds } = await supabase.from('predictions').select('user_id, match_id, predicted_result');
   const { data: results } = await supabase.from('match_results').select('*');
   const resMap = {};
@@ -625,10 +628,10 @@ async function renderLeaderboard(area) {
 
 // ===================== 初始化 =====================
 async function init() {
+  bindGlobalEvents();
   await checkAuth();
   if (currentUser) await loadAllData();
   renderAll();
-  // 监听认证变化
   supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN') {
       currentUser = session.user;
@@ -643,7 +646,12 @@ async function init() {
     }
   });
 }
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  currentUser = session?.user || null;
+  updateUserUI();
+}
 init();
 </script>
 </body>
-</html> 
+</html>
